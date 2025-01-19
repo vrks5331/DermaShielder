@@ -19,20 +19,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  PageController _pageController;
+  //PageController _pageController;
   int currentIndex = 0;
 
   @override
   void initState() {
-    _PageController = PageController(
-        initialPage: 0
-    );
+    //_PageController = PageController(
+        //initialPage: 0
+    //);
     super.initState(); // initializes state
   }
 
   @override   // disposes the state
   void dispose() {
-    _pageController.dispose();
+    //_pageController.dispose();
     super.dispose();
   }
 
@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
                 fontWeight: FontWeight.w400,
               ),
             ),
-          ).
+          )
 
         ],
       )
