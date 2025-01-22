@@ -19,20 +19,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  //PageController _pageController;
+  late PageController _pageController;
   int currentIndex = 0;
 
   @override
   void initState() {
-    //_PageController = PageController(
-        //initialPage: 0
-    //);
+    _pageController = PageController(
+        initialPage: 0
+    );
     super.initState(); // initializes state
   }
 
   @override   // disposes the state
   void dispose() {
-    //_pageController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -57,6 +57,41 @@ class _HomePageState extends State<HomePage> {
           )
 
         ],
+      ),
+      body: Stack (
+        alignment: Alignment.bottomCenter,
+        children: <Widget>[
+          PageView(
+            onPageChanged: (int Page) {
+              setState(() {
+                currentIndex = page;
+              });
+            },
+            controller: _pageController,
+            children: <Widget>[
+              makePage(
+                image: '',
+                title: '',
+                content: ''
+              ),
+              makePage(
+                  image: '',
+                  title: '',
+                  content: ''
+              ),
+              makePage(
+                  image: '',
+                  title: '',
+                  content: ''
+              ),
+              makePage(
+                  image: '',
+                  title: '',
+                  content: ''
+              ),
+            ]
+          )
+        ]
       )
     );
   }
