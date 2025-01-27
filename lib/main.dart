@@ -70,29 +70,32 @@ class _HomePageState extends State<HomePage> {
             controller: _pageController,
             children: <Widget>[
               makePage(
-                image: '',
-                title: '',
-                content: ''
+                image: './assets/logo.jpeg',
+                title: Strings.stepOneTitle,
+                content: Strings.stepOneContent
               ),
               makePage(
-                  image: '',
-                  title: '',
-                  content: ''
+                  image: './assets/logo.jpeg',
+                  title: Strings.stepTwoTitle,
+                  content: Strings.stepTwoContent,
               ),
               makePage(
-                  image: '',
-                  title: '',
-                  content: ''
-              ),
-              makePage(
-                  image: '',
-                  title: '',
-                  content: ''
+                  image: './assets/logo.jpeg',
+                  title: Strings.stepThreeTitle,
+                  content: Strings.stepThreeContent,
               ),
             ]
-          )
+          ),
+          Container(
+            margin: EdgeInsets.only(bottom: 60),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _buildIndicator(),
+            ),
+          ),
         ]
-      )
+      ),
+
     );
   }
 }
