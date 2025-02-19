@@ -57,7 +57,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildSlideIn(50, Icon(Icons.lock, size: 100)),
+                _buildSlideIn(50, SizedBox(
+                  width: 100, // Set the desired width
+                  height: 100, // Set the desired height
+                  child: Image.asset("lib/assets/images/logo_transparent.png"),
+                ))
+                ,
                 _buildSlideIn(100, SizedBox(height: 20)), // Added spacing
                 _buildSlideIn(150, Text(
                   'Welcome back, you\'ve been missed!',

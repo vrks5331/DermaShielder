@@ -24,5 +24,6 @@ flutter:
   assets:
     - lib/assets/images/DS_logo.jpeg
     - lib/assets/images/google_logo.png
+    - lib/assets/images/logo_transparent.png
 
 
