@@ -1,101 +1,18 @@
-import "./helpers/colorsSys.dart";
-import "./helpers/strings.dart";
 import "package:flutter/material.dart";
-import 'package:flutter/widgets.dart';
+import 'pages/login_page.dart';
 
 void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
-
-    )
-  );
+  runApp(const MyApp());
 }
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  late PageController _pageController;
-  int currentIndex = 0;
-
-  @override
-  void initState() {
-    _pageController = PageController(
-        initialPage: 0
-    );
-    super.initState(); // initializes state
-  }
-
-  @override   // disposes the state
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(right:20, top:20),
-            child: Text(
-              "Skip",
-              style: TextStyle(
-                color: ColorSys.gray,
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          )
-
-        ],
-      ),
-      body: Stack (
-        alignment: Alignment.bottomCenter,
-        children: <Widget>[
-          PageView(
-            onPageChanged: (int Page) {
-              setState(() {
-                currentIndex = page;
-              });
-            },
-            controller: _pageController,
-            children: <Widget>[
-              makePage(
-                image: './assets/logo.jpeg',
-                title: Strings.stepOneTitle,
-                content: Strings.stepOneContent
-              ),
-              makePage(
-                  image: './assets/logo.jpeg',
-                  title: Strings.stepTwoTitle,
-                  content: Strings.stepTwoContent,
-              ),
-              makePage(
-                  image: './assets/logo.jpeg',
-                  title: Strings.stepThreeTitle,
-                  content: Strings.stepThreeContent,
-              ),
-            ]
-          ),
-          Container(
-            margin: EdgeInsets.only(bottom: 60),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: _buildIndicator(),
-            ),
-          ),
-        ]
-      ),
-
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
     );
   }
 }
