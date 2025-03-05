@@ -2,6 +2,7 @@ import 'package:DermaShielder/pages/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
+//test
 
 
 class AuthPage extends StatelessWidget {
