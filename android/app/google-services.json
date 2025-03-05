@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "241853222287",
+    "project_id": "dermashielder",
+    "storage_bucket": "dermashielder.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241853222287:android:486d2bf63b07a16ca8cffa",
+        "android_client_info": {
+          "package_name": "com.example.dermashielder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAC1iG-5AtL8qrrQYv_prU-5wdn_F5Ayso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

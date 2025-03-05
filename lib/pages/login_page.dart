@@ -2,6 +2,7 @@ import 'package:DermaShielder/components/button.dart';
 import 'package:DermaShielder/components/textfield.dart';
 import 'package:DermaShielder/components/square_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 //comment
 
 class LoginPage extends StatefulWidget {
@@ -13,12 +14,15 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   // text editing controllers
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   // sign user in
-  void signUserIn() {
-    // Add your sign-in logic here
+  void signUserIn() async {
+    await FirebaseAuth.instance
+        .signInWithEmailAndPassword(
+        email: emailController.text, password: passwordController.text
+    );
   }
 
   late AnimationController _controller;
@@ -32,11 +36,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 600),
     );
 
-    _slideAnimation = Tween<Offset>(begin: Offset(0, 1), end: Offset(0, 0))
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: const Offset(0, 0))
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     // Start the animation after the page is loaded
-    Future.delayed(Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       _controller.forward();
     });
   }
@@ -63,24 +67,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   child: Image.asset("lib/assets/images/logo_transparent.png"),
                 ))
                 ,
-                _buildSlideIn(100, SizedBox(height: 20)), // Added spacing
+                _buildSlideIn(100, const SizedBox(height: 20)), // Added spacing
                 _buildSlideIn(150, Text(
                   'Welcome back, you\'ve been missed!',
                   style: TextStyle(color: Colors.grey[700], fontSize: 16),
                 )),
-                _buildSlideIn(200, SizedBox(height: 30)), // Added spacing
+                _buildSlideIn(200, const SizedBox(height: 30)), // Added spacing
                 _buildSlideIn(250, MyTextField(
-                  controller: usernameController,
-                  hintText: 'Username',
+                  controller: emailController,
+                  hintText: 'Email',
                   obscureText: false,
                 )),
-                _buildSlideIn(300, SizedBox(height: 20)), // Added spacing
+                _buildSlideIn(300, const SizedBox(height: 20)), // Added spacing
                 _buildSlideIn(350, MyTextField(
                   controller: passwordController,
                   hintText: 'Password',
                   obscureText: true,
                 )),
-                _buildSlideIn(400, SizedBox(height: 20)), // Added spacing
+                _buildSlideIn(400, const SizedBox(height: 20)), // Added spacing
                 _buildSlideIn(450, Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -90,9 +94,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ],
                   ),
                 )),
-                _buildSlideIn(500, SizedBox(height: 30)), // Added spacing
+                _buildSlideIn(500, const SizedBox(height: 30)), // Added spacing
                 _buildSlideIn(550, MyButton(onTap: signUserIn)),
-                _buildSlideIn(600, SizedBox(height: 30)), // Added spacing
+                _buildSlideIn(600, const SizedBox(height: 30)), // Added spacing
                 _buildSlideIn(650, Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Row(
@@ -116,8 +120,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ],
                   ),
                 )),
-                _buildSlideIn(700, SizedBox(height: 30)), // Added spacing
-                _buildSlideIn(750, Row(
+                _buildSlideIn(700, const SizedBox(height: 30)), // Added spacing
+                _buildSlideIn(750, const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SquareTile(imagePath: 'lib/assets/images/google_logo.png'),
@@ -125,13 +129,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     SquareTile(imagePath: 'lib/assets/images/DS_logo.jpeg')
                   ],
                 )),
-                _buildSlideIn(800, SizedBox(height: 30)), // Added spacing
+                _buildSlideIn(800, const SizedBox(height: 30)), // Added spacing
                 _buildSlideIn(850, Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Not a member?", style: TextStyle(color: Colors.grey[700])),
-                    SizedBox(width: 4),
-                    Text("Register now!", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    const Text("Register now!", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
                   ],
                 )),
               ],

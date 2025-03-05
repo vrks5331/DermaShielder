@@ -2,6 +2,8 @@ import "package:flutter/material.dart";
 import "login_page.dart";
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -30,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     });
   }
@@ -53,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             children: [
               Image.asset("lib/assets/images/logo_transparent.png"), // Placeholder logo
               const SizedBox(height: 20),
-              Text('DermaShielder', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+              const Text('DermaShielder', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
             ],
           ),
         ),
