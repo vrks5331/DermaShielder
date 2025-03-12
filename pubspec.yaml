@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  smooth_page_indicator: ^1.0.0
   flutter_native_splash: ^2.4.4
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
@@ -19,8 +20,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-
-  dermashielder: any
 flutter:
   uses-material-design: true
 

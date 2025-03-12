@@ -3,6 +3,7 @@ import 'package:DermaShielder/components/textfield.dart';
 import 'package:DermaShielder/components/square_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_page.dart';
 //comment test
 
 class LoginPage extends StatefulWidget {
@@ -19,11 +20,66 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // sign user in
   void signUserIn() async {
-    await FirebaseAuth.instance
-        .signInWithEmailAndPassword(
-        email: emailController.text, password: passwordController.text
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      Navigator.of(context).pop(); // Remove loading circle
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 500),
+          pageBuilder: (context, animation, secondaryAnimation) => const HomePage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var offsetAnimation = animation.drive(tween);
+
+            return SlideTransition(position: offsetAnimation, child: child);
+          },
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      Navigator.of(context).pop(); // Remove loading circle on error
+
+      String message = "An error occurred. Please double-check your username and/or password.";
+
+      if (e.code == 'user-not-found') {
+        message = "No user found for that email.";
+      } else if (e.code == 'wrong-password') {
+        message = "Incorrect password. Please try again.";
+      } else if (e.code == 'invalid-email') {
+        message = "Invalid email format.";
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+
+
 
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
