@@ -1,3 +1,4 @@
+import "package:DermaShielder/pages/onboarding_screen.dart";
 import "package:flutter/material.dart";
 import "login_page.dart";
 //test
@@ -33,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
       );
     });
   }

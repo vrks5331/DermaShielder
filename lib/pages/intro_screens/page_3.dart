@@ -6,7 +6,7 @@ class IntroPage3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.pink,
+      color: Colors.grey[300],
       child: Center(child: Text("wsg lil bro 3"))
     );
   }
