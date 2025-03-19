@@ -182,7 +182,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   children: [
                     SquareTile(imagePath: 'lib/assets/images/google_logo.png'),
                     SizedBox(width: 25),
-                    SquareTile(imagePath: 'lib/assets/images/DS_logo.jpeg')
+                    SquareTile(imagePath: 'lib/assets/images/github_logo.png')
                   ],
                 )),
                 _buildSlideIn(800, const SizedBox(height: 30)), // Added spacing

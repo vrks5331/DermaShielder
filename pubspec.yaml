@@ -27,5 +27,7 @@ flutter:
     - lib/assets/images/DS_logo.jpeg
     - lib/assets/images/google_logo.png
     - lib/assets/images/logo_transparent.png
+    - lib/assets/images/github_logo.png
+    - lib/assets/images/default_profile.jpg
 
 
