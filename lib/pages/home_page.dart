@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,6 +17,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  List<Widget> images = [];
 
   @override
   void initState() {
@@ -39,6 +43,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     });
   }
 
+  Container _addImage(File file) {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 200,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue),
+        borderRadius: BorderRadius.circular(10),
+        image: DecorationImage(
+          image: FileImage(file),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -55,44 +74,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             backgroundColor: Colors.grey[600],
             elevation: 0,
           ),
-          drawer: Drawer(
-            child: Column(
-              children: [
-                UserAccountsDrawerHeader(
-                  accountName: Text(user?.displayName ?? "User"),
-                  accountEmail: Text(user?.email ?? "No email"),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : const AssetImage("assets/images/default_profile.jpg") as ImageProvider,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.home),
-                  title: const Text("Home"),
-                  onTap: () => Navigator.pop(context),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text("Settings"),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.nightlight),
-                  title: const Text("Dark Mode"),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text("Logout"),
-                  onTap: () => FirebaseAuth.instance.signOut(),
-                ),
-              ],
-            ),
-          ),
+          drawer: _buildDrawer(),
           body: _buildBody(user),
           floatingActionButton: FloatingActionButton(
             onPressed: _toggleMenu,
@@ -101,7 +83,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
         ),
 
-        // Dimmed background when menu is open
         if (_isMenuOpen)
           GestureDetector(
             onTap: _toggleMenu,
@@ -110,7 +91,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
           ),
 
-        // Animated menu sliding out from the button
         Positioned(
           bottom: 90,
           right: 20,
@@ -121,14 +101,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _buildMenuItem(Icons.upload, "Upload Image", () {
+                  _buildMenuItem(Icons.upload, "Upload Image", () async {
                     _toggleMenu();
-                    // TODO: Implement image upload functionality
+                    FilePickerResult? result = await FilePicker.platform.pickFiles();
+                    if (result != null) {
+                      File file = File(result.files.single.path!);
+                      setState(() {
+                        images.add(_addImage(file));
+                      });
+                    }
                   }),
                   const SizedBox(height: 10),
                   _buildMenuItem(Icons.camera_alt, "Take Photo", () {
                     _toggleMenu();
-                    // TODO: Implement take photo functionality
+                    // TODO: Implement Take Photo
                   }),
                 ],
               ),
@@ -139,7 +125,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  /// ✅ Extracted method for conditional rendering
   Widget _buildBody(User? user) {
     if (user == null) {
       return const Center(
@@ -150,14 +135,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       );
     } else {
       return Center(
-        child: Column(
+        child: images.isEmpty
+            ? Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Icon(
               Icons.add_a_photo_sharp,
-              size: 200, // Huge icon
-              color: Colors.grey, // Slightly faded color
+              size: 200,
+              color: Colors.grey,
             ),
             const SizedBox(height: 20),
             Text(
@@ -171,12 +156,58 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
             const SizedBox(height: 40),
           ],
+        )
+            : Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListView(
+            children: images,
+          ),
         ),
       );
     }
   }
 
-  /// ✅ Extracted method for menu item buttons
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: Text(user?.displayName ?? "User"),
+            accountEmail: Text(user?.email ?? "No email"),
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: user?.photoURL != null
+                  ? NetworkImage(user!.photoURL!)
+                  : const AssetImage("assets/images/default_profile.jpg") as ImageProvider,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text("Home"),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.nightlight),
+            title: const Text("Dark Mode"),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text("Logout"),
+            onTap: () => FirebaseAuth.instance.signOut(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap) {
     return ElevatedButton(
       onPressed: onTap,
