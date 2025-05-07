@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,7 +16,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  List<Widget> images = [];
+  List<Map<String, dynamic>> images = [];
+  int _colorIndex = 0;
+  int _imageCount = 0; // Keeps track of the number of images uploaded.
 
   @override
   void initState() {
@@ -44,17 +45,141 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Container _addImage(File file) {
+    String filePath = file.path;
+    Color barColor = _colorIndex % 2 == 0 ? Colors.lightBlue : Colors.pink.shade300;
+    _colorIndex++;
+
+    // Label and Timestamp
+    String label = "Image #$_imageCount"; // Display the image number
+    String timestamp = DateTime.now().toString(); // Current timestamp
+
     return Container(
       margin: const EdgeInsets.all(10),
-      height: 200,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.blue),
+        color: barColor,
         borderRadius: BorderRadius.circular(10),
-        image: DecorationImage(
-          image: FileImage(file),
-          fit: BoxFit.cover,
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(10),
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text("$_imageCount", style: TextStyle(color: barColor)),
+            ),
+            const SizedBox(width: 10),
+            Text(filePath, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        subtitle: Text(
+          "Uploaded at: $timestamp",
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chat, color: Colors.white),
+              onPressed: () => _openAIChatDialog(filePath),
+            ),
+            IconButton(
+              icon: const Icon(Icons.analytics, color: Colors.white),
+              onPressed: () => _openAnalyzeDialog(filePath),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Future<void> _openAIChatDialog(String filePath) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: SizedBox(
+            height: 400,
+            width: 300,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.blue,
+                  child: const Text(
+                    "AI Chatbot",
+                    style: TextStyle(fontSize: 24, color: Colors.white),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text("File Path: $filePath", style: const TextStyle(fontSize: 16)),
+                ),
+                // TODO: Add the AI Chatbot interface here.
+                // This can include a TextField, a list of chat messages, etc.
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Function to handle the Analyze dialog.
+  Future<void> _openAnalyzeDialog(String filePath) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: SizedBox(
+            height: 200,
+            width: 300,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ),
+                const SizedBox(height: 20),
+                const Text("Analyzing image..."),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: TextButton(
+                    child: const Text("Cancel"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _showErrorDialog();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Error dialog when analyzing image fails.
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Icon(Icons.error, color: Colors.red),
+          content: const Text("Error: Failed to analyze image."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -107,7 +232,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     if (result != null) {
                       File file = File(result.files.single.path!);
                       setState(() {
-                        images.add(_addImage(file));
+                        _imageCount++; // Increment image count
+                        images.add({"file": file});
                       });
                     }
                   }),
@@ -160,7 +286,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             : Padding(
           padding: const EdgeInsets.all(8.0),
           child: ListView(
-            children: images,
+            children: images.map((image) {
+              return _addImage(image["file"] as File);
+            }).toList(),
           ),
         ),
       );
