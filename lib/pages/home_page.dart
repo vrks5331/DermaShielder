@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'chat_interface.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -97,31 +98,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Future<void> _openAIChatDialog(String filePath) async {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: SizedBox(
-          height: 400,
-          width: 300,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.blue,
-                child: const Text("AI Chatbot", style: TextStyle(fontSize: 24, color: Colors.white)),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text("File Path: $filePath", style: const TextStyle(fontSize: 16)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _openAnalyzeDialog(String filePath) async {
     showDialog(
@@ -223,7 +199,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
             IconButton(
               icon: const Icon(Icons.chat, color: Colors.white),
-              onPressed: () => _openAIChatDialog(file.path),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatInterface(images: images, isDarkMode: _isDarkMode)),
+                  );
+              }
             ),
             IconButton(
               icon: const Icon(Icons.analytics, color: Colors.white),
