@@ -2,11 +2,17 @@ import 'package:DermaShielder/pages/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_page.dart';
-//test
 
 
-class AuthPage extends StatelessWidget {
-  const AuthPage({super.key});
+
+class AuthPage extends StatefulWidget {
+  const AuthPage({Key? key}) : super(key: key);
+
+  @override
+  State<AuthPage> createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -14,18 +20,13 @@ class AuthPage extends StatelessWidget {
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // user is logged in
           if (snapshot.hasData) {
-            return const HomePage();
+            return HomePage();
+          } else {
+            return const SplashScreen();
           }
-
-          //user is NOT logged in
-          else {
-            return const SplashScreen(); // alert for invalid login
-          }
-        }
-
-      )
+        },
+      ),
     );
   }
 }
