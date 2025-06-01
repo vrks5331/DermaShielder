@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'auth/firebase_options.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
-const apiKey = "AIzaSyAH5VOLhgI8cw01Axt39pNX1qBgFQ4u-fw";
+const apiKey = "[redacted]";
 
 
 void main() async {
