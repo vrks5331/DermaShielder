@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 class ChatInterface extends StatefulWidget {
   final List<Map<String, dynamic>> images;
@@ -19,33 +20,52 @@ class _ChatInterfaceState extends State<ChatInterface> {
   int selectedIndex = 0;
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> messages = [];
+  final gemini = Gemini.instance;
+  String buffer = "";
 
   @override
   void initState() {
     super.initState();
-    _addBotIntro();
+    _sendInitialMessage();
   }
 
-  void _addBotIntro() {
-    messages.add({
-      'sender': 'bot',
-      'text':
-      'This appears to be a ${widget.images[selectedIndex]['label']}. Would you like treatment advice?',
+  void _sendInitialMessage() {
+    final label = widget.images[selectedIndex]['label'] ?? 'lesion';
+    gemini.promptStream(parts: [
+      Part.text("Tell me more about a $label for research purposes only.")
+    ]).listen((value) {
+      if (value?.output != null) {
+        setState(() {
+          messages.add({
+            'sender': 'bot',
+            'text': value!.output!
+          });
+        });
+      }
     });
   }
 
   void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
     setState(() {
-      messages.add({
-        'sender': 'user',
-        'text': _controller.text.trim(),
-      });
-      messages.add({
-        'sender': 'bot',
-        'text': 'Thanks! I will provide insights shortly.',
-      });
+      messages.add({'sender': 'user', 'text': text});
       _controller.clear();
+    });
+
+    buffer = "";
+    gemini.promptStream(parts: [Part.text(text)]).listen((value) {
+      if (value?.output != null) {
+        buffer += value!.output!;
+        setState(() {
+          if (messages.isNotEmpty && messages.last['sender'] == 'bot') {
+            messages[messages.length - 1]['text'] = buffer;
+          } else {
+            messages.add({'sender': 'bot', 'text': buffer});
+          }
+        });
+      }
     });
   }
 
@@ -53,9 +73,9 @@ class _ChatInterfaceState extends State<ChatInterface> {
     setState(() {
       selectedIndex = index;
       messages.clear();
-      _addBotIntro();
     });
-    Navigator.pop(context); // Closes drawer on mobile
+    _sendInitialMessage();
+    Navigator.pop(context);
   }
 
   @override
@@ -85,7 +105,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
       children: [
         AppBar(
           backgroundColor: Colors.grey[600],
-          title: Text(widget.images[selectedIndex]['label']),
+          title: Text(widget.images[selectedIndex]['label'] ?? 'Skin Lesion'),
           leading: !isWideScreen
               ? Builder(
             builder: (context) => IconButton(
@@ -104,18 +124,23 @@ class _ChatInterfaceState extends State<ChatInterface> {
             itemCount: messages.length,
             itemBuilder: (context, index) {
               final msg = messages[index];
-              return msg['sender'] == 'user'
-                  ? BubbleSpecialThree(
-                text: msg['text']!,
-                color: Colors.blue,
-                tail: true,
-                isSender: true,
-              )
-                  : BubbleSpecialThree(
-                text: msg['text']!,
-                color: Colors.grey.shade300,
-                tail: true,
-                isSender: false,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: msg['sender'] == 'user'
+                    ? BubbleSpecialThree(
+                  text: msg['text']!,
+                  color: Colors.blue,
+                  tail: true,
+                  isSender: true,
+                  textStyle: const TextStyle(color: Colors.white, fontSize: 16),
+                )
+                    : BubbleSpecialThree(
+                  text: msg['text']!,
+                  color: Colors.grey.shade300,
+                  tail: true,
+                  isSender: false,
+                  textStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+                ),
               );
             },
           ),

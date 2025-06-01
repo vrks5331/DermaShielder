@@ -3,6 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_interface.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -382,8 +384,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 children: [
                   _buildMenuItem(Icons.upload, "Upload Image", _pickImage),
                   const SizedBox(height: 10),
-                  _buildMenuItem(Icons.camera_alt, "Take Photo", () {
+                  _buildMenuItem(Icons.camera_alt, "Take Photo", () async {
                     _toggleMenu();
+
+                    final picker = ImagePicker();
+                    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+
+                    if (photo != null) {
+                      File file = File(photo.path);
+                      setState(() {
+                        images.add({
+                          "file": file,
+                          "timestamp": DateTime.now().toString(),
+                          "label": "Image #$_imageCount"
+                        });
+                        _imageCount++;
+                      });
+                    }
                   }),
                 ],
               ),
