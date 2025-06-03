@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_interface.dart';
 import 'package:image_picker/image_picker.dart';
+import 'tflite_helper.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -102,38 +103,45 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
 
   Future<void> _openAnalyzeDialog(String filePath) async {
+    String result = "Analyzing...";
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: SizedBox(
-          height: 200,
-          width: 300,
-          child: Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-              const SizedBox(height: 20),
-              const Text("Analyzing image..."),
-              const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: TextButton(
-                  child: const Text("Cancel"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showErrorDialog();
-                  },
-                ),
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          _runModel() async {
+            try {
+              String classification = await TFLiteHelper.classifyImage(File(filePath));
+              setState(() => result = classification);
+            } catch (e) {
+              setState(() => result = "Error: $e");
+            }
+          }
+
+          Future.microtask(_runModel);
+
+          return AlertDialog(
+            title: const Text("Image Analysis"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 20),
+                Text(result, textAlign: TextAlign.center),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text("Close"),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
+
 
   Future<void> _openPhotoDialog(String filePath) async {
     showDialog(
