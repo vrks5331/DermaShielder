@@ -38,5 +38,6 @@ flutter:
     - lib/assets/images/github_logo.png
     - lib/assets/images/default_profile.jpg
     - lib/models/resnet50_model.tflite
+    - lib/models/model_unquant.tflite
 
 

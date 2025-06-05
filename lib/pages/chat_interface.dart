@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 
+
 class ChatInterface extends StatefulWidget {
   final List<Map<String, dynamic>> images;
   final bool isDarkMode;
+  final String initialClassification;
 
   const ChatInterface({
     Key? key,
     required this.images,
     required this.isDarkMode,
+    required this.initialClassification,
   }) : super(key: key);
 
   @override
@@ -21,7 +24,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> messages = [];
   final gemini = Gemini.instance;
-  String buffer = "";
+  String buffer = ""; // This will accumulate streamed parts
 
   @override
   void initState() {
@@ -30,18 +33,51 @@ class _ChatInterfaceState extends State<ChatInterface> {
   }
 
   void _sendInitialMessage() {
-    final label = widget.images[selectedIndex]['label'] ?? 'lesion';
+    final userInitialPrompt = "Tell me more about a ${widget.initialClassification} for research purposes only.";
+
+    // 1) Add the initial prompt as a user message
+    setState(() {
+      messages.add({
+        'sender': 'user',
+        'text': userInitialPrompt,
+      });
+    });
+
+    buffer = ""; // Clear buffer before a new stream
     gemini.promptStream(parts: [
-      Part.text("Tell me more about a $label for research purposes only.")
+      Part.text(userInitialPrompt) // Send the same prompt to Gemini
     ]).listen((value) {
       if (value?.output != null) {
-        setState(() {
+        // Accumulate parts into the buffer
+        buffer += value!.output!;
+        // You might want to show a typing indicator here while streaming
+      }
+    }, onError: (error) {
+      print('[_sendInitialMessage] Gemini stream encountered an ERROR: $error');
+      setState(() {
+        // Add error message as a bot response
+        messages.add({
+          'sender': 'bot',
+          'text': 'Error from AI: $error'
+        });
+      });
+    }, onDone: () {
+      // 2) Add the consolidated buffer as a single bot message when done
+      setState(() {
+        if (buffer.isNotEmpty) {
           messages.add({
             'sender': 'bot',
-            'text': value!.output!
+            'text': buffer,
           });
-        });
-      }
+        } else {
+          // Handle case where Gemini returns nothing
+          messages.add({
+            'sender': 'bot',
+            'text': 'I did not receive a response from the AI for this query.'
+          });
+        }
+      });
+      print('[_sendInitialMessage] Gemini stream completed. Final message added.');
     });
   }
 
@@ -49,23 +85,42 @@ class _ChatInterfaceState extends State<ChatInterface> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
+    // Add user's message immediately
     setState(() {
       messages.add({'sender': 'user', 'text': text});
       _controller.clear();
     });
 
-    buffer = "";
+    buffer = ""; // Clear buffer for the new message
     gemini.promptStream(parts: [Part.text(text)]).listen((value) {
       if (value?.output != null) {
         buffer += value!.output!;
-        setState(() {
-          if (messages.isNotEmpty && messages.last['sender'] == 'bot') {
-            messages[messages.length - 1]['text'] = buffer;
-          } else {
-            messages.add({'sender': 'bot', 'text': buffer});
-          }
-        });
+        // No setState here while buffering, to prevent UI jumping
       }
+    }, onError: (error) {
+      print('[_sendMessage] Gemini stream encountered an ERROR: $error');
+      setState(() {
+        messages.add({
+          'sender': 'bot',
+          'text': 'Error from AI: $error'
+        });
+      });
+    }, onDone: () {
+      // Add the consolidated bot message when done
+      setState(() {
+        if (buffer.isNotEmpty) {
+          messages.add({
+            'sender': 'bot',
+            'text': buffer,
+          });
+        } else {
+          messages.add({
+            'sender': 'bot',
+            'text': 'I did not receive a response from the AI for this query.'
+          });
+        }
+      });
+      print('[_sendMessage] Gemini stream completed. Final message added.');
     });
   }
 
@@ -74,8 +129,15 @@ class _ChatInterfaceState extends State<ChatInterface> {
       selectedIndex = index;
       messages.clear();
     });
+    // NOTE: This _sendInitialMessage call will use the *same* initialClassification
+    // that was passed into the ChatInterface when it was first created.
+    // If you need to re-analyze the newly selected image and get a *new*
+    // classification for Gemini, you'd need to call TFLiteHelper.classifyImage here.
+    // For this, you'd need to pass TFLiteHelper methods/instance or the image file
+    // to ChatInterface and then call classifyImage here.
+    // For now, this is kept as is, assuming initial chat is based on the first analyzed image.
     _sendInitialMessage();
-    Navigator.pop(context);
+    Navigator.pop(context); // Close the sidebar/drawer
   }
 
   @override
@@ -106,16 +168,18 @@ class _ChatInterfaceState extends State<ChatInterface> {
         AppBar(
           backgroundColor: Colors.grey[600],
           title: Text(widget.images[selectedIndex]['label'] ?? 'Skin Lesion'),
-          leading: !isWideScreen
-              ? Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-          )
-              : IconButton(
+          leading: isWideScreen
+              ? IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
+          )
+              : Builder(
+            builder: (context) {
+              return IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              );
+            },
           ),
         ),
         Expanded(
@@ -136,10 +200,11 @@ class _ChatInterfaceState extends State<ChatInterface> {
                 )
                     : BubbleSpecialThree(
                   text: msg['text']!,
-                  color: Colors.grey.shade300,
+                  // FIXED: Use Colors.grey.shade700 (non-nullable) or conditional color
+                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
                   tail: true,
                   isSender: false,
-                  textStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+                  textStyle: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
                 ),
               );
             },
@@ -165,6 +230,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
                       horizontal: 20,
                     ),
                   ),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black), // Text color in TextField
                 ),
               ),
               const SizedBox(width: 10),

@@ -63,11 +63,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       File file = File(result.files.single.path!);
+      // Extract filename from the path for display
+      String fileName = file.path.split('/').last; // Gets the last part of the path
+
       setState(() {
         images.add({
           "file": file,
           "timestamp": DateTime.now().toString(),
-          "label": "Image #$_imageCount"
+          "label": fileName // Use filename for uploaded files
         });
         _imageCount++;
       });
@@ -101,45 +104,101 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
+  void _deleteImage(int index) {
+    setState(() {
+      images.removeAt(index);
+    });
+  }
+
 
   Future<void> _openAnalyzeDialog(String filePath) async {
-    String result = "Analyzing...";
-    showDialog(
+    String analysisResult = "Analyzing...";
+    String? finalClassification; // Keep it nullable initially
+
+    // Show dialog with a future that will update its content and then pop
+    await showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          _runModel() async {
-            try {
-              String classification = await TFLiteHelper.classifyImage(File(filePath));
-              setState(() => result = classification);
-            } catch (e) {
-              setState(() => result = "Error: $e");
+      barrierDismissible: false, // Prevent dismissing until analysis is done or user explicitly closes
+      builder: (context) {
+        // This is a State<StatefulBuilder> context, allowing setState for the dialog
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            // Function to run the model and update dialog
+            _performAnalysisAndSetResult() async {
+              try {
+                // Await the classification directly here
+                String classification = await TFLiteHelper.classifyImage(File(filePath));
+                setState(() {
+                  analysisResult = classification; // Update dialog content
+                  finalClassification = classification; // Store the result
+                });
+                // After analysis is done, you might want to automatically close the dialog
+                // or allow the user to close it. For now, we'll keep the close button.
+              } catch (e) {
+                setState(() {
+                  analysisResult = "Error: $e";
+                  finalClassification = "Error: $e"; // Store error message
+                });
+                print('Error during TFLite classification: $e');
+              }
             }
-          }
 
-          Future.microtask(_runModel);
+            bool analysisStarted = false;
+            if (!analysisStarted) {
+              analysisStarted = true;
+              _performAnalysisAndSetResult();
+            }
 
-          return AlertDialog(
-            title: const Text("Image Analysis"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(result, textAlign: TextAlign.center),
-              ],
-            ),
-            actions: [
-              TextButton(
-                child: const Text("Close"),
-                onPressed: () => Navigator.of(context).pop(),
+            return AlertDialog(
+              title: const Text("Image Analysis"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Show CircularProgressIndicator only if still analyzing
+                  if (analysisResult == "Analyzing...")
+                    const CircularProgressIndicator()
+                  else
+                    const SizedBox.shrink(), // No indicator if done
+                  const SizedBox(height: 20),
+                  Text(analysisResult, textAlign: TextAlign.center),
+                ],
               ),
-            ],
-          );
-        },
-      ),
+              actions: [
+                TextButton(
+                  child: const Text("Close"),
+                  onPressed: () {
+                    // You might want to handle what happens if user closes
+                    // before analysis is complete (finalClassification is still null)
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
+
+    // After the analysis dialog is closed (either by user or automatically), navigate
+    if (finalClassification != null && !finalClassification!.startsWith("Error:")) {
+      // Only navigate if analysis was successful and not an error
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatInterface(
+            images: images,
+            isDarkMode: _isDarkMode,
+            initialClassification: finalClassification!,
+          ),
+        ),
+      );
+    } else if (finalClassification != null && finalClassification!.startsWith("Error:")) {
+      // If there was an error in classification, show a generic error dialog
+      _showErrorDialog(); // Using your existing error dialog
+    }
+    // If finalClassification is null here, it means the dialog was closed before
+    // analysis completed. You can decide how to handle this (e.g., do nothing, show a message).
+    // The barrierDismissible: false helps prevent this, but the Close button still works.
   }
 
 
@@ -147,29 +206,35 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: SizedBox(
-          height: 200,
-          width: 300,
-          child: Image.network(filePath),
-        )
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: SizedBox(
+            height: 400, // Increased height for better viewing
+            width: 300,
+            // Use Image.file for local file paths
+            child: Image.file(
+              File(filePath),
+              fit: BoxFit.contain, // Ensures the whole image fits without cropping
+              errorBuilder: (context, error, stackTrace) {
+                return Center(child: Text('Could not load image: $error'));
+              },
+            ),
+          )
       ),
     );
   }
 
   void _showErrorDialog() {
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Icon(Icons.error, color: Colors.red),
-        content: const Text("Error: Failed to analyze image."),
-        actions: [
-          TextButton(
+        context: context,
+        builder: (context) => AlertDialog(
+            title: const Icon(Icons.error, color: Colors.red),
+            content: const Text("Error: Failed to analyze image."),
+            actions: [
+            TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
+    child: const Text("OK"),
+    ),
+    ]),
     );
   }
 
@@ -197,7 +262,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ],
         ),
         subtitle: Text(
-          "Uploaded at: $timestamp",
+          "Uploaded at: ${timestamp.split('.')[0]}",
           style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
         ),
         trailing: Row(
@@ -205,21 +270,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           children: [
             IconButton(
               icon: const Icon(Icons.photo, color: Colors.white),
-              onPressed: () => _openPhotoDialog(file.path),
+              onPressed: () => _openPhotoDialog(file.path), // Use file.path here
             ),
             IconButton(
-              icon: const Icon(Icons.chat, color: Colors.white),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatInterface(images: images, isDarkMode: _isDarkMode)),
-                  );
-              }
+                icon: const Icon(Icons.chat, color: Colors.white),
+                onPressed: () {
+                  _openAnalyzeDialog(file.path);
+                }
             ),
             IconButton(
-              icon: const Icon(Icons.analytics, color: Colors.white),
-              onPressed: () => _openAnalyzeDialog(file.path),
+              icon: const Icon(Icons.delete, color: Colors.white),
+              onPressed: () => _deleteImage(index),
             ),
           ],
         ),
@@ -404,7 +465,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         images.add({
                           "file": file,
                           "timestamp": DateTime.now().toString(),
-                          "label": "Image #$_imageCount"
+                          "label": "Image #$_imageCount" // Use generic label for camera photos
                         });
                         _imageCount++;
                       });

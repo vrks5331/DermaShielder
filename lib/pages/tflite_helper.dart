@@ -15,9 +15,12 @@ class TFLiteHelper {
     'vascular lesions'
   ];
 
+  // Removed: static late String result;
+  // Removed: String getResult() { return result; }
+
   static Future<String> classifyImage(File imageFile) async {
     // Load the model
-    final interpreter = await Interpreter.fromAsset('lib/models/resnet50_model.tflite');
+    final interpreter = await Interpreter.fromAsset('lib/models/model_unquant.tflite');
 
     // Load and resize the image
     img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
@@ -64,6 +67,7 @@ class TFLiteHelper {
     // Release the interpreter resources
     interpreter.close();
 
+    // Directly return the formatted string
     return "${labels[maxIdx]} ($confidence%)";
   }
 }

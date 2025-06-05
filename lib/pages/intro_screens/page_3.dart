@@ -20,7 +20,7 @@ class IntroPage3 extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              "Get answers, guidance, and peace of mind.",
+              "Get answers, guidance, and peace of mind. Disclaimer: This is NOT a replacement for a dermatologist. It is highly recommended you visit a dermatologist if you are doubtful.",
               style: TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
